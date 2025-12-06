@@ -1,6 +1,6 @@
 package io.github.northzerod.zBack
 
-import io.github.northzerod.zBack.ZBack.Companion.plg
+import io.github.northzerod.zBack.ZBack.Companion.log
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -16,9 +16,9 @@ class DatabaseManager(val url: String) {
         try {
             Class.forName("org.sqlite.JDBC")
             connection = DriverManager.getConnection(url)
-            plg.logger.info("Successfully connect to database.db")
+            log.info("Successfully connect to database.db")
         } catch (e: Exception) {
-            plg.logger.warning("Cannot connect to database.db")
+            log.warning("Cannot connect to database.db")
             throw e
         }
     }
@@ -27,6 +27,7 @@ class DatabaseManager(val url: String) {
         sql: String = """
             CREATE TABLE IF NOT EXISTS last_death (
             	uuid TEXT NOT NULL PRIMARY KEY,
+                name TEXT NOT NULL,
             	dimension TEXT NOT NULL,
             	x REAL NOT NULL,
                 y REAL NOT NULL,
@@ -41,7 +42,7 @@ class DatabaseManager(val url: String) {
             val stmt = connection.createStatement()
             stmt.execute(sql)
         } catch (e: Exception) {
-            plg.logger.warning("Exception occurred when executing SQL:\n$sql")
+            log.warning("Exception occurred when executing SQL:\n$sql")
             throw e
         }
     }
@@ -49,10 +50,11 @@ class DatabaseManager(val url: String) {
     fun update(
         playerData: PlayerData,
         sql: String = """
-                INSERT INTO last_death (uuid, dimension, x, y, z, yaw, pitch, is_used_back) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO last_death (uuid, name, dimension, x, y, z, yaw, pitch, is_used_back) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(uuid) DO UPDATE SET
                     uuid = excluded.uuid,
+                    name = excluded.name,
                     dimension = excluded.dimension,
                     x = excluded.x,
                     y = excluded.y,
@@ -65,16 +67,17 @@ class DatabaseManager(val url: String) {
         try {
             val pstmt = connection.prepareStatement(sql)
             pstmt.setString(1, playerData.uuid)
-            pstmt.setString(2, playerData.dimension)
-            pstmt.setDouble(3, playerData.x)
-            pstmt.setDouble(4, playerData.y)
-            pstmt.setDouble(5, playerData.z)
-            pstmt.setFloat(6, playerData.yaw)
-            pstmt.setFloat(7, playerData.pitch)
-            pstmt.setBoolean(8, playerData.isUsedBack)
+            pstmt.setString(2, playerData.name)
+            pstmt.setString(3, playerData.dimension)
+            pstmt.setDouble(4, playerData.x)
+            pstmt.setDouble(5, playerData.y)
+            pstmt.setDouble(6, playerData.z)
+            pstmt.setFloat(7, playerData.yaw)
+            pstmt.setFloat(8, playerData.pitch)
+            pstmt.setBoolean(9, playerData.isUsedBack)
             pstmt.executeUpdate()
         } catch (e: Exception) {
-            plg.logger.warning("Exception occurred when executing SQL:\n$sql")
+            log.warning("Exception occurred when executing SQL:\n$sql")
             throw e
         }
     }
@@ -83,7 +86,7 @@ class DatabaseManager(val url: String) {
         try {
             connection.close()
         } catch (e: Exception) {
-            plg.logger.warning("Exception occurred when closing database connection")
+            log.warning("Exception occurred when closing database connection")
             throw e
         }
     }
@@ -99,6 +102,7 @@ class DatabaseManager(val url: String) {
             if (rs.next()) {
                 return PlayerData(
                     uuid,
+                    rs.getString("name"),
                     rs.getString("dimension"),
                     rs.getDouble("x"),
                     rs.getDouble("y"),
@@ -110,7 +114,7 @@ class DatabaseManager(val url: String) {
             }
             return null
         } catch (e: Exception) {
-            plg.logger.warning("Exception occurred when executing SQL:\n$sql")
+            log.warning("Exception occurred when executing SQL:\n$sql")
             throw e
         }
     }
