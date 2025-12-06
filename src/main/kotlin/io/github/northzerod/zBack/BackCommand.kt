@@ -8,6 +8,8 @@ import io.github.northzerod.zBack.ZBack.Companion.plg
 import io.github.northzerod.zBack.ZBack.Companion.sch
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 
@@ -22,15 +24,29 @@ class BackCommand() {
             val back = Commands.literal(root).executes { ctx ->
                 when (val sender = ctx.source.sender) {
                     is Player -> when (val playerData = dbm.query(sender.uniqueId.toString())) {
-                        null -> sender.sendRichMessage("<gold>你还未死亡过")
+                        null -> sender.sendMessage(
+                            Component.translatable(
+                                "nzd.zback.you_have_never_died", NamedTextColor.GOLD
+                            )
+                        )
+
                         else -> when (val location = playerData.toLocation()) {
                             null -> sender.sendRichMessage("<red>location is null")
                             else -> when {
-                                playerData.isUsedBack -> sender.sendRichMessage("<gold>你已经回到过死亡地点了")
+                                playerData.isUsedBack -> sender.sendMessage(
+                                    Component.translatable(
+                                        "nzd.zback.can_only_use_once", NamedTextColor.GOLD
+                                    )
+                                )
+
                                 else -> {
                                     sender.teleport(location)
                                     dbm.update(playerData.copy(isUsedBack = true))
-                                    sender.sendRichMessage("<green>已回到上次死亡地点")
+                                    sender.sendMessage(
+                                        Component.translatable(
+                                            "nzd.zback.returned_to_location", NamedTextColor.GREEN
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -44,8 +60,13 @@ class BackCommand() {
             val info = Commands.literal("info").executes { ctx ->
                 when (val sender = ctx.source.sender) {
                     is Player -> when (val playerData = dbm.query(sender.uniqueId.toString())) {
-                        null -> sender.sendRichMessage("<gold>你还未死亡过")
-                        else -> sender.sendRichMessage("<gold>$playerData")
+                        null -> sender.sendMessage(
+                            Component.translatable(
+                                "nzd.zback.you_have_never_died", NamedTextColor.GOLD
+                            )
+                        )
+
+                        else -> sender.sendRichMessage("<green>$playerData")
                     }
 
                     else -> sender.sendPlainMessage("Only players can use!")
@@ -57,11 +78,23 @@ class BackCommand() {
                 val name = ctx.getArgument<String>("target", String::class.java)
                 val sender = ctx.source.sender
                 when (name.matches("^[a-zA-Z0-9_]{3,16}$".toRegex())) {
-                    false -> sender.sendRichMessage("<red>玩家用户名应满足「仅包含半角大小写英文字母、数字、下划线，长度3~16字符」")
+                    false -> sender.sendMessage(
+                        Component.translatable(
+                            "nzd.zback.username_requirements", NamedTextColor.RED
+                        )
+                    )
+
                     else -> sch.runTaskAsynchronously(plg) { _ ->
                         when (val playerData = dbm.query(Bukkit.getOfflinePlayer(name).uniqueId.toString())) {
-                            null -> sender.sendRichMessage("<gold>$name 还未死亡过")
-                            else -> sender.sendRichMessage("<gold>$playerData")
+                            null -> sender.sendMessage(
+                                Component.translatable(
+                                    "nzd.zback.sb_have_never_died",
+                                    NamedTextColor.GOLD,
+                                    Component.text(name),
+                                )
+                            )
+
+                            else -> sender.sendRichMessage("<green>$playerData")
                         }
                     }
                 }

@@ -18,6 +18,7 @@ class ZBack : JavaPlugin() {
         plg = this
         log = plg.logger
         saveDefaultConfig()
+        TranslationRegister()
         dbm = DatabaseManager("jdbc:sqlite:plugins/ZBack/database.db")
         sch = this.server.scheduler
         server.pluginManager.registerEvents(PlayerDeathListener(), this)
