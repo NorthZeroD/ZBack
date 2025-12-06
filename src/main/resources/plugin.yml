@@ -1,0 +1,7 @@
+name: ZBack
+version: '0.1.0'
+main: io.github.northzerod.zBack.ZBack
+api-version: '1.21'
+prefix: ZBack
+authors: [NorthZeroD]
+description: Back to last death location
