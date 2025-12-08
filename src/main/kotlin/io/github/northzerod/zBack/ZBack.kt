@@ -21,6 +21,10 @@ class ZBack : JavaPlugin() {
         plg = this
         log = plg.logger
         worldUuid = Bukkit.getWorld(Key.key("minecraft:overworld"))?.uid.toString().replace("-", "")
+        when (worldUuid) {
+            "null" -> log.warning("World UUID is null! Will use table 'last_death_null' to save death data in database!")
+            else -> log.info("Using table 'last_death_$worldUuid' to save death data in database")
+        }
         saveDefaultConfig()
         TranslationRegister()
         dbm = DatabaseManager("jdbc:sqlite:plugins/ZBack/database.db")
@@ -31,6 +35,7 @@ class ZBack : JavaPlugin() {
             commands.registrar().register(BackCommand.bCommand)
         }
         log.info("Enabled ZBack :D")
+        log.info("Report issues here: https://github.com/NorthZeroD/ZBack/issues")
     }
 
     override fun onDisable() {
