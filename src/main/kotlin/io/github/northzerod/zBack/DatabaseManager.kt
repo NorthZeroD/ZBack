@@ -1,6 +1,7 @@
 package io.github.northzerod.zBack
 
 import io.github.northzerod.zBack.ZBack.Companion.log
+import io.github.northzerod.zBack.ZBack.Companion.worldUuid
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -23,9 +24,9 @@ class DatabaseManager(val url: String) {
         }
     }
 
-    fun create(
-        sql: String = """
-            CREATE TABLE IF NOT EXISTS last_death (
+    fun create() {
+        val sql = """
+            CREATE TABLE IF NOT EXISTS last_death_$worldUuid (
             	uuid TEXT NOT NULL PRIMARY KEY,
                 name TEXT NOT NULL,
             	dimension TEXT NOT NULL,
@@ -37,7 +38,6 @@ class DatabaseManager(val url: String) {
                 is_used_back INTEGER NOT NULL
             );
         """.trimIndent()
-    ) {
         try {
             val stmt = connection.createStatement()
             stmt.execute(sql)
@@ -47,10 +47,9 @@ class DatabaseManager(val url: String) {
         }
     }
 
-    fun update(
-        playerData: PlayerData,
-        sql: String = """
-                INSERT INTO last_death (uuid, name, dimension, x, y, z, yaw, pitch, is_used_back) 
+    fun update(playerData: PlayerData) {
+        val sql = """
+                INSERT INTO last_death_$worldUuid (uuid, name, dimension, x, y, z, yaw, pitch, is_used_back) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(uuid) DO UPDATE SET
                     uuid = excluded.uuid,
@@ -63,7 +62,6 @@ class DatabaseManager(val url: String) {
                     pitch = excluded.pitch,
                     is_used_back = excluded.is_used_back;
                 """.trimIndent()
-    ) {
         try {
             val pstmt = connection.prepareStatement(sql)
             pstmt.setString(1, playerData.uuid)
@@ -91,10 +89,8 @@ class DatabaseManager(val url: String) {
         }
     }
 
-    fun query(
-        uuid: String,
-        sql: String = "SELECT * FROM last_death WHERE uuid = ?;"
-    ): PlayerData? {
+    fun query(uuid: String): PlayerData? {
+        val sql = "SELECT * FROM last_death_$worldUuid WHERE uuid = ?;"
         try {
             val pstmt = connection.prepareStatement(sql)
             pstmt.setString(1, uuid)
