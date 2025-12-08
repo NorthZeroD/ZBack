@@ -22,7 +22,7 @@ jobs:
           cache: 'gradle'
 
       - name: 🏗️ Build with Gradle
-        run: ./gradlew build
+        run: chmod +x gradlew && ./gradlew build
 
       - name: 🚀 Create Release and Upload JAR
         uses: softprops/action-gh-release@v2
